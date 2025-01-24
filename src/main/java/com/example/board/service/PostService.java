@@ -1,6 +1,7 @@
 package com.example.board.service;
 
 import com.example.board.model.Post;
+import com.example.board.model.PostPostRequestBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,16 @@ public class PostService {
         return posts;
     }
 
-    public Optional<Post> getPost(Long postId) {
+    public Optional<Post> getPostByPostId(Long postId) {
         return posts.stream().filter(post -> postId.equals(post.getPostId())).findFirst();
+    }
+
+    public Post createPost(PostPostRequestBody requestBody) {
+        // 새롭게 저장될 포스트아이디
+        long newPostId = posts.stream().mapToLong(Post::getPostId).max().orElse(0L) + 1;
+        Post newPost = new Post(newPostId, requestBody.getBody(), ZonedDateTime.now());
+        // db에 저장하는 것 대체
+        posts.add(newPost);
+        return newPost;
     }
 }
