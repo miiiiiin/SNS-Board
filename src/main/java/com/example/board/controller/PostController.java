@@ -1,10 +1,10 @@
 package com.example.board.controller;
 
 import com.example.board.model.Post;
+import com.example.board.model.PostPatchRequestBody;
 import com.example.board.model.PostPostRequestBody;
 import com.example.board.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +19,10 @@ public class PostController {
     private PostService postService;
 
     @GetMapping
-    public ResponseEntity<List<Post>> getPosts() {
-        List<Post> posts = new ArrayList<>();
-//        return new ResponseEntity<>(posts, HttpStatus.OK);
-        return ResponseEntity.ok(posts);
+    public ResponseEntity<ArrayList<Post>> getPosts() {
+        List<Post> posts = postService.getPosts();
+        // 200 ok와 응답으로 내려줌
+        return ResponseEntity.ok((ArrayList<Post>) posts);
     }
 
     @GetMapping("/{postId}")
@@ -35,7 +35,21 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody PostPostRequestBody requestBody) {
-        Post post = postService.createPost(requestBody);
+        var post = postService.createPost(requestBody);
         return ResponseEntity.ok(post);
+    }
+
+    @PatchMapping("/{postId}")
+    public ResponseEntity<Post> updatePost(@PathVariable Long postId, @RequestBody PostPatchRequestBody requestBody) {
+        var post = postService.updatePost(postId, requestBody);
+
+        return ResponseEntity.ok(post);
+    }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void > deletePost(@PathVariable Long postId) {
+        postService.deletePost(postId);
+        // 204 : nocontent statuscode
+        return ResponseEntity.noContent().build();
     }
 }
