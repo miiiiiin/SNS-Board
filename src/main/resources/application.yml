@@ -18,7 +18,11 @@ spring:
     # ?? db ?? ??
     url: jdbc:postgresql://localhost:5432/board-db
     username: board-master
-    password: greenday32
+    password:
+  security:
+    user:
+      name: board-admin
+      password: board-admin-password
 
 #logging:
 #  level:
