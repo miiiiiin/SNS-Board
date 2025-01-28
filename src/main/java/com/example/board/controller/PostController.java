@@ -19,18 +19,19 @@ public class PostController {
     private PostService postService;
 
     @GetMapping
-    public ResponseEntity<ArrayList<Post>> getPosts() {
-        List<Post> posts = postService.getPosts();
+    public ResponseEntity<List<Post>> getPosts() {
+        var posts = postService.getPosts();
         // 200 ok와 응답으로 내려줌
-        return ResponseEntity.ok((ArrayList<Post>) posts);
+        return ResponseEntity.ok(posts);
     }
 
     @GetMapping("/{postId}")
     public ResponseEntity<Post> getPostByPostId(@PathVariable Long postId) {
-        Optional<Post> matchingPost = postService.getPostByPostId(postId);
-        return matchingPost
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        var post = postService.getPostByPostId(postId);
+//        return matchingPost
+//                .map(ResponseEntity::ok)
+//                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.ok(post);
     }
 
     @PostMapping
