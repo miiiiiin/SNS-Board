@@ -1,5 +1,6 @@
 package com.example.board.service;
 
+import com.example.board.exception.post.PostNotFoundException;
 import com.example.board.model.Post;
 import com.example.board.model.PostPatchRequestBody;
 import com.example.board.model.PostPostRequestBody;
@@ -29,7 +30,7 @@ public class PostService {
         // postId() -> record 객체로 생성 시 사용 가능
         var postEntity = postEntityRepository.findById(postId)
                 .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "POST NOT FOUND"));
+                        new PostNotFoundException(postId));
         // optional 형태인데 데이터가 존재하지 않는다면 예외처리 던짐
         // POST DTO로 변환해서 반환
         return Post.from(postEntity);
@@ -49,7 +50,7 @@ public class PostService {
 
         var postEntity = postEntityRepository.findById(postId)
                 .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "POST NOT FOUND"));
+                        new PostNotFoundException(postId));
         // 수정할 데이터 넘겨주기
         postEntity.setBody(requestBody.body());
         var updatedPostEntity = postEntityRepository.save(postEntity);

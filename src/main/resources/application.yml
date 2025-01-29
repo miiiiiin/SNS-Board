@@ -18,14 +18,18 @@ spring:
     # ?? db ?? ??
     url: jdbc:postgresql://localhost:5432/board-db
     username: board-master
-    password:
+    password: greenday32
   security:
     user:
       name: board-admin
       password: board-admin-password
 
-#logging:
-#  level:
+# ?? ?? ?? : TRACE < DEBUG < INFO(??) < WARN < ERROR
+logging:
+  level:
+    root: INFO # ?? ?? ??
+#    com.example.board.controller.PostController: INFO
+
 #    org.hibernate.type: TRACE
 #    org.hibernate.orm.jdbc.bind: TRACE
 #    org.hibernate.engine.transaction.internal.transactionImpl: DEBUG

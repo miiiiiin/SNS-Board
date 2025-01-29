@@ -12,9 +12,9 @@ import java.util.Objects;
 @Table(name = "post")
 // JPA를 통해 삭제 처리 될 때, 내부적으로 DELETE 대신 아래 sql이 실행되 SOFT DELETE 처리 됨
 // 디비 내에서 완전히 삭제하는 것이 아니라, deletedDatetime을 현재 시간으로 업데이트 해주는 방식으로 처리함
-@SQLDelete(sql = "UPDATE \"post\" SET deletedDateTime = CURRENT_TIMESTAMP WHERE postid = ?")
+@SQLDelete(sql = "UPDATE \"post\" SET deleteddatetime = CURRENT_TIMESTAMP WHERE postid = ?")
 // 실제 서비스에서 보여주기 위해 조회 용도로 게시물 꺼낼 때에는 (삭제된 적이 없는) 게시물만 보여줌
-@SQLRestriction("deletedDateTime IS NULL")
+@SQLRestriction("deleteddatetime IS NULL")
 public class PostEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
