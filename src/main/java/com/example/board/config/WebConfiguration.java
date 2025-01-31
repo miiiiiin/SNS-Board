@@ -20,6 +20,7 @@ import java.util.List;
 public class WebConfiguration {
 
     @Autowired private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Autowired private JwtExceptionFilter jwtExceptionFilter;
 
     // cors 관련 설정 커스터마이징
     @Bean
@@ -60,6 +61,7 @@ public class WebConfiguration {
                 ) // 사용자 인증과 관련된 session : RESTAPI는 무상태이기에 세션 정보가 필요하지 않음 (STATELESS: 세션이 생성되지 않도록 함)
                 .csrf(CsrfConfigurer::disable)  // CSRF 검증 비활성화 (REST API의 경우 사용하지 않음)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // jwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter.class 바로 앞에 추가해줌
+                .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class)
                 .httpBasic(Customizer.withDefaults()); // basic auth 사
         return http.build();
     }

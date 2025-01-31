@@ -1,5 +1,6 @@
 package com.example.board.config;
 
+import com.example.board.exception.jwt.JwtTokenNotFoundException;
 import com.example.board.service.JwtService;
 import com.example.board.service.UserService;
 import jakarta.servlet.FilterChain;
@@ -33,10 +34,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         var auth = request.getHeader(HttpHeaders.AUTHORIZATION);
         // 인증 완료되면 securityContext에 인증정보 설정
         var securityContext = SecurityContextHolder.getContext();
+
+        // 통신시 header에서 토큰 제대로 전달받지 않은 경우
+        if (ObjectUtils.isEmpty(auth) || auth.startsWith(BEARER_PREFIX)) {
+            throw new JwtTokenNotFoundException();
+        }
+
         /**
          * AUTH이 비어있지 않고, auth이 bearer prefix로 시작하는 경우에 한해 jwt token 인증
          * SecurityContext의 auth가 비어있는 경우도 포함
          */
+        // auth가 BEARER_PREFIX로 시작하지 않으면 jwt 검증 자체를 하지 않음
         if (!ObjectUtils.isEmpty(auth) && auth.startsWith(BEARER_PREFIX) && securityContext.getAuthentication() == null) {
             // accessToken값 BEARER_PREFIX 크기만큼 추출
             var accessToken = auth.substring(BEARER_PREFIX.length());
