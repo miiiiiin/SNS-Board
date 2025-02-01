@@ -36,9 +36,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         var securityContext = SecurityContextHolder.getContext();
 
         // 통신시 header에서 토큰 제대로 전달받지 않은 경우
-        if (ObjectUtils.isEmpty(auth) || auth.startsWith(BEARER_PREFIX)) {
-            throw new JwtTokenNotFoundException();
-        }
+//        if (ObjectUtils.isEmpty(auth) || auth.startsWith(BEARER_PREFIX)) {
+//            throw new JwtTokenNotFoundException();
+//        }
 
         /**
          * AUTH이 비어있지 않고, auth이 bearer prefix로 시작하는 경우에 한해 jwt token 인증

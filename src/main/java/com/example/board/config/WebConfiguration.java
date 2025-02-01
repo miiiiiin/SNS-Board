@@ -53,8 +53,13 @@ public class WebConfiguration {
                         // 프리플라이트 요청 허용
                         // Spring Security는 기본적으로 모든 요청을 차단하므로 OPTIONS 메서드로 프리플라이트 요청을 허용해야 함
                         requests
-                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .anyRequest().authenticated()
+                                .requestMatchers(HttpMethod.POST,"/api/*/users")
+                                .permitAll() // users ..로 시작하는 모든 api는 모두 허용
+                                .anyRequest()
+                                .authenticated() // 나머지 모든 api는 반드시 인증을 해야 함 (회원가입 로그인 제외, 사용자 인증 사용할 것)
+
+//                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//                                .anyRequest().authenticated()
                 ) // 모든 request에 대해서 인증 처리
                 .sessionManagement(
                         (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)

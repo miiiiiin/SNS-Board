@@ -146,7 +146,7 @@ public class UserEntity implements UserDetails {
         userEntity.setPassword(password);
 
         // 각 유저 생성 시 랜덤 프로필 placeholder 이미지 사진 설정 (1~100)
-        userEntity.setProfile("https://avatar.iran.liara.run/public/" + new Random().nextInt(100));
+        userEntity.setProfile("https://avatar.iran.liara.run/public/" + new Random().nextInt(100) + 1);
 
         return userEntity;
     }
