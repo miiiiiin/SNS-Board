@@ -1,4 +1,4 @@
-package com.example.board.model;
+package com.example.board.model.post;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
