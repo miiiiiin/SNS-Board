@@ -9,7 +9,8 @@ import java.util.Objects;
 
 // JPA 적용
 @Entity
-@Table(name = "post")
+@Table(name = "post",
+indexes = @Index(name = "post_userid_idx", columnList = "userid")) // "userid" 컬럼에 대한 인덱스
 // JPA를 통해 삭제 처리 될 때, 내부적으로 DELETE 대신 아래 sql이 실행되 SOFT DELETE 처리 됨
 // 디비 내에서 완전히 삭제하는 것이 아니라, deletedDatetime을 현재 시간으로 업데이트 해주는 방식으로 처리함
 @SQLDelete(sql = "UPDATE \"post\" SET deleteddatetime = CURRENT_TIMESTAMP WHERE postid = ?")
@@ -27,6 +28,16 @@ public class PostEntity {
     private ZonedDateTime updatedDateTime;
     @Column
     private ZonedDateTime deletedDateTime;
+
+    /**
+     * 게시물과 유저의 관계는 N:1
+     * JOIN 컬럼으로 UserEntity의 프라이머리 키 값 "userid"로 설정
+     * 실제 테이블에서는 "userid"라는 컬럼으로 추가됨. 실제 데이터 관점에서 db에 저장될 때에는
+     * "userid"기반으로 연동되나 실제 코드 작성 시에는 user만 사용해도 내부적으로 userid만으로 user를 가져와서 세팅 가능
+     */
+    @ManyToOne
+    @JoinColumn(name = "userid")
+    private UserEntity user;
 
     public Long getPostId() {
         return postId;
@@ -68,17 +79,33 @@ public class PostEntity {
         this.deletedDateTime = deletedDateTime;
     }
 
+    public UserEntity getUser() {
+        return user;
+    }
+
+    public void setUser(UserEntity user) {
+        this.user = user;
+    }
+
+    public static PostEntity of (String body, UserEntity user) {
+        var post = new PostEntity();
+        post.setBody(body);
+        // postEntity에 현재 로그인된 유저정보로 user 세팅
+        post.setUser(user);
+        return post;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PostEntity that = (PostEntity) o;
-        return Objects.equals(postId, that.postId) && Objects.equals(body, that.body) && Objects.equals(createdDateTime, that.createdDateTime) && Objects.equals(updatedDateTime, that.updatedDateTime) && Objects.equals(deletedDateTime, that.deletedDateTime);
+        return Objects.equals(postId, that.postId) && Objects.equals(body, that.body) && Objects.equals(createdDateTime, that.createdDateTime) && Objects.equals(updatedDateTime, that.updatedDateTime) && Objects.equals(deletedDateTime, that.deletedDateTime) && Objects.equals(user, that.user);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(postId, body, createdDateTime, updatedDateTime, deletedDateTime);
+        return Objects.hash(postId, body, createdDateTime, updatedDateTime, deletedDateTime, user);
     }
 
     // PRE 어노테이션 : jpa에 의해서 실제 데이터가 내부적으로 저장,업데이트 되기 직전에 원하는 로직을 할 수 있음

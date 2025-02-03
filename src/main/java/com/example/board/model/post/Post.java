@@ -1,6 +1,7 @@
 package com.example.board.model.post;
 
 import com.example.board.model.entity.PostEntity;
+import com.example.board.model.user.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.ZonedDateTime;
@@ -14,6 +15,8 @@ import java.time.ZonedDateTime;
 public record Post(
         Long postId,
         String body,
+        // 게시물을 작성한 유저 정보 (클라이언트로 내려줄 것이기 때문에 UserEntity가 아닌 User(DTO) 형식으로 보냄)
+        User user,
         ZonedDateTime createdDateTime,
         ZonedDateTime updatedDateTime,
         ZonedDateTime deletedDateTime
@@ -24,6 +27,7 @@ public record Post(
         return new Post(
                 postEntity.getPostId(),
                 postEntity.getBody(),
+                User.from(postEntity.getUser()),
                 postEntity.getCreatedDateTime(),
                 postEntity.getUpdatedDateTime(),
                 postEntity.getDeletedDateTime());

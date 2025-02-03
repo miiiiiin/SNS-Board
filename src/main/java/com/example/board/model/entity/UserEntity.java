@@ -12,7 +12,8 @@ import java.util.Objects;
 import java.util.Random;
 
 @Entity
-@Table(name = "\"user\"") // postgresql "user" 예약어 방지
+@Table(name = "\"user\"", indexes = {@Index(name = "user_username_idx", columnList = "username", unique = true)}) // username에도 인덱스 처리, db 레벨에서도 중복 생성 원천봉쇄
+// postgresql "user" 예약어 방지
 @SQLDelete(sql = "UPDATE \"user\" SET deleteddatetime = CURRENT_TIMESTAMP WHERE userid = ?") // soft delete
 @SQLRestriction("deleteddatetime IS NULL")
 public class UserEntity implements UserDetails {

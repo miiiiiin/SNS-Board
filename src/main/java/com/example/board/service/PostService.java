@@ -1,6 +1,8 @@
 package com.example.board.service;
 
 import com.example.board.exception.post.PostNotFoundException;
+import com.example.board.exception.user.UserNotAllowedException;
+import com.example.board.model.entity.UserEntity;
 import com.example.board.model.post.Post;
 import com.example.board.model.post.PostPatchRequestBody;
 import com.example.board.model.post.PostPostRequestBody;
@@ -36,32 +38,40 @@ public class PostService {
         return Post.from(postEntity);
     }
 
-    public Post createPost(PostPostRequestBody requestBody) {
-        var postEntity = new PostEntity();
-        postEntity.setBody(requestBody.body());
+    // api를 호출한 현재의 유저를 currentUser로 설정
+    public Post createPost(PostPostRequestBody requestBody, UserEntity currentUser) {
+        var postEntity = PostEntity.of(requestBody.body(), currentUser);
         // 리포지토리에 실제 저장 수행
         // 실제 저장되어 있는 데이터 값을 변수로 받음
         var savedPostEntity = postEntityRepository.save(postEntity);
         return Post.from(savedPostEntity);
     }
 
-    public Post updatePost(Long postId, PostPatchRequestBody requestBody) {
-        // 수정하고자 하는 대상 게시물 찾기
+    public Post updatePost(Long postId, PostPatchRequestBody requestBody, UserEntity currentUser) {
+        // 수정하고자 하는 대상 게시물 찾은 다음, 해당 게시물의 작성자와 현재 유저가 같은지를 검증
 
         var postEntity = postEntityRepository.findById(postId)
                 .orElseThrow(() ->
                         new PostNotFoundException(postId));
+
+        if (!postEntity.getUser().equals(currentUser)) {
+            throw new UserNotAllowedException();
+        }
+
         // 수정할 데이터 넘겨주기
         postEntity.setBody(requestBody.body());
         var updatedPostEntity = postEntityRepository.save(postEntity);
         return Post.from(updatedPostEntity);
     }
 
-    public void deletePost(Long postId) {
+    public void deletePost(Long postId, UserEntity currentUser) {
         var postEntity = postEntityRepository.findById(postId)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "POST NOT FOUND"));
 
+        if (!postEntity.getUser().equals(currentUser)) {
+            throw new UserNotAllowedException();
+        }
         postEntityRepository.delete(postEntity);
     }
 }
