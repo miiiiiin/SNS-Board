@@ -27,6 +27,10 @@ public class PostEntity {
     @Column
     private Long repliesCount = 0L;
 
+    // 좋아요
+    @Column
+    private Long likesCount = 0L;
+
     @Column
     private ZonedDateTime createdDateTime;
     @Column
@@ -67,6 +71,14 @@ public class PostEntity {
 
     public void setRepliesCount(Long repliesCount) {
         this.repliesCount = repliesCount;
+    }
+
+    public Long getLikesCount() {
+        return likesCount;
+    }
+
+    public void setLikesCount(Long likesCount) {
+        this.likesCount = likesCount;
     }
 
     public ZonedDateTime getCreatedDateTime() {
@@ -114,12 +126,12 @@ public class PostEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PostEntity post = (PostEntity) o;
-        return Objects.equals(postId, post.postId) && Objects.equals(body, post.body) && Objects.equals(repliesCount, post.repliesCount) && Objects.equals(createdDateTime, post.createdDateTime) && Objects.equals(updatedDateTime, post.updatedDateTime) && Objects.equals(deletedDateTime, post.deletedDateTime) && Objects.equals(user, post.user);
+        return Objects.equals(postId, post.postId) && Objects.equals(body, post.body) && Objects.equals(repliesCount, post.repliesCount) && Objects.equals(likesCount, post.likesCount) && Objects.equals(createdDateTime, post.createdDateTime) && Objects.equals(updatedDateTime, post.updatedDateTime) && Objects.equals(deletedDateTime, post.deletedDateTime) && Objects.equals(user, post.user);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(postId, body, repliesCount, createdDateTime, updatedDateTime, deletedDateTime, user);
+        return Objects.hash(postId, body, repliesCount, likesCount, createdDateTime, updatedDateTime, deletedDateTime, user);
     }
 
     // PRE 어노테이션 : jpa에 의해서 실제 데이터가 내부적으로 저장,업데이트 되기 직전에 원하는 로직을 할 수 있음

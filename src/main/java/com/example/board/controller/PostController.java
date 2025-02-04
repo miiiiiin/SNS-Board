@@ -1,6 +1,7 @@
 package com.example.board.controller;
 
 import com.example.board.model.entity.UserEntity;
+import com.example.board.model.like.Like;
 import com.example.board.model.post.Post;
 import com.example.board.model.post.PostPatchRequestBody;
 import com.example.board.model.post.PostPostRequestBody;
@@ -58,12 +59,19 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Void > deletePost(@PathVariable Long postId, Authentication authentication) {
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId, Authentication authentication) {
         logger.info("DELETE /api/v1/posts/{}", postId);
         postService.deletePost(postId, (UserEntity) authentication.getPrincipal());
         // 204 : nocontent statuscode
         return ResponseEntity.noContent().build();
     }
 
-
+    /**
+     * LIKE 기능
+     */
+    @PostMapping("/{postId}/likes")
+    public ResponseEntity<Post> toggleLike(@PathVariable Long postId, Authentication authentication) {
+        var post = postService.toggleLike(postId, (UserEntity) authentication.getPrincipal());
+        return ResponseEntity.ok(post);
+    }
 }

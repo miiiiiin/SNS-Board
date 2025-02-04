@@ -19,6 +19,7 @@ public record Post(
         User user,
         // 댓글 개수 집계
         Long repliesCount,
+        Long likesCount,
         ZonedDateTime createdDateTime,
         ZonedDateTime updatedDateTime,
         ZonedDateTime deletedDateTime
@@ -31,6 +32,7 @@ public record Post(
                 postEntity.getBody(),
                 User.from(postEntity.getUser()),
                 postEntity.getRepliesCount(),
+                postEntity.getLikesCount(),
                 postEntity.getCreatedDateTime(),
                 postEntity.getUpdatedDateTime(),
                 postEntity.getDeletedDateTime());

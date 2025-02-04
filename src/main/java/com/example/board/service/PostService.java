@@ -3,25 +3,30 @@ package com.example.board.service;
 import com.example.board.exception.post.PostNotFoundException;
 import com.example.board.exception.user.UserNotAllowedException;
 import com.example.board.exception.user.UserNotFoundException;
+import com.example.board.model.entity.LikeEntity;
 import com.example.board.model.entity.UserEntity;
 import com.example.board.model.post.Post;
 import com.example.board.model.post.PostPatchRequestBody;
 import com.example.board.model.post.PostPostRequestBody;
 import com.example.board.model.entity.PostEntity;
+import com.example.board.repository.LikeEntityRepository;
 import com.example.board.repository.PostEntityRepository;
 import com.example.board.repository.UserEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PostService {
 
     @Autowired private PostEntityRepository postEntityRepository;
     @Autowired private UserEntityRepository userEntityRepository;
+    @Autowired private LikeEntityRepository likeEntityRepository;
 
     public List<Post> getPosts() {
         // 이대로 넘겨주면 raw data를 통으로 넘겨주기 때문에, 서비스에 필요한 필드들만 선별하여 별도의 dto를 구성하여 넉며줌
@@ -84,5 +89,27 @@ public class PostService {
                 .orElseThrow(() -> new UserNotFoundException(username));
         var postEntities = postEntityRepository.findByUser(userEntity);
         return postEntities.stream().map(Post::from).toList();
+    }
+
+    /**
+     * LIKE 기능
+     * @param postId
+     * @return
+     */
+    @Transactional
+    public Post toggleLike(Long postId, UserEntity currentUser) {
+        var postEntity = postEntityRepository.findById(postId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "POST NOT FOUND"));
+        var likeEntity = likeEntityRepository.findByUserAndPost(currentUser, postEntity);
+
+        if (likeEntity.isPresent()) {
+            likeEntityRepository.delete(likeEntity.get());
+            postEntity.setLikesCount(Math.max(0, postEntity.getLikesCount() - 1));
+        } else {
+            likeEntityRepository.save(LikeEntity.of(currentUser, postEntity));
+            postEntity.setLikesCount(postEntity.getLikesCount() + 1);
+        }
+        return Post.from(postEntityRepository.save(postEntity));
     }
 }
