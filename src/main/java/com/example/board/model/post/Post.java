@@ -17,6 +17,8 @@ public record Post(
         String body,
         // 게시물을 작성한 유저 정보 (클라이언트로 내려줄 것이기 때문에 UserEntity가 아닌 User(DTO) 형식으로 보냄)
         User user,
+        // 댓글 개수 집계
+        Long repliesCount,
         ZonedDateTime createdDateTime,
         ZonedDateTime updatedDateTime,
         ZonedDateTime deletedDateTime
@@ -28,6 +30,7 @@ public record Post(
                 postEntity.getPostId(),
                 postEntity.getBody(),
                 User.from(postEntity.getUser()),
+                postEntity.getRepliesCount(),
                 postEntity.getCreatedDateTime(),
                 postEntity.getUpdatedDateTime(),
                 postEntity.getDeletedDateTime());

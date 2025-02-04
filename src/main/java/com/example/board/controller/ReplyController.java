@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/posts/{postid}/replies")
+@RequestMapping("/api/v1/posts/{postId}/replies")
 public class ReplyController {
     @Autowired
     private ReplyService replyService;
@@ -41,12 +41,12 @@ public class ReplyController {
      * @param authentication
      * @return
      */
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<Reply> createReply(@PathVariable Long postId,
                                              @RequestBody ReplyPostRequestBody requestBody,
                                              Authentication authentication) {
         // 맨 끝 매개변수 : 댓글 생성하기 위해 api 호출한 현재 로그인된 유저
-        var reply =  replyService.createReply(postId, requestBody, (UserEntity) authentication.getPrincipal());
+        var reply = replyService.createReply(postId, requestBody, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(reply);
     }
 
@@ -60,7 +60,7 @@ public class ReplyController {
     }
 
     @DeleteMapping("/{replyId}")
-    public ResponseEntity<Void > deletePost(@PathVariable Long postId,
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId,
                                             @PathVariable Long replyId,
                                             Authentication authentication) {
         replyService.deleteReply(postId, replyId, (UserEntity) authentication.getPrincipal());

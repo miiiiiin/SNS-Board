@@ -14,7 +14,7 @@ import java.time.ZonedDateTime;
 // 아래는 null이 아닐 경우에만 json으로 변환시켜줌
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record Reply(
-        Long postId,
+        Long replyId,
         String body,
         // 게시물을 작성한 유저 정보 (클라이언트로 내려줄 것이기 때문에 UserEntity가 아닌 User(DTO) 형식으로 보냄)
         User user,
@@ -35,3 +35,4 @@ public record Reply(
                 replyEntity.getUpdatedDateTime(),
                 replyEntity.getDeletedDateTime());
     }
+}

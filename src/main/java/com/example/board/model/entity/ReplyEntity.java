@@ -10,7 +10,8 @@ import java.util.Objects;
 // JPA 적용
 @Entity
 @Table(name = "reply",
-indexes = @Index(name = "post_userid_idx", columnList = "userid")) // "userid" 컬럼에 대한 인덱스
+indexes = {@Index(name = "reply_userid_idx", columnList = "userid"),
+         @Index(name = "reply_postid_idx", columnList = "postid")}) // "userid" 컬럼에 대한 인덱스
 // JPA를 통해 삭제 처리 될 때, 내부적으로 DELETE 대신 아래 sql이 실행되 SOFT DELETE 처리 됨
 // 디비 내에서 완전히 삭제하는 것이 아니라, deletedDatetime을 현재 시간으로 업데이트 해주는 방식으로 처리함
 @SQLDelete(sql = "UPDATE \"reply\" SET deleteddatetime = CURRENT_TIMESTAMP WHERE replyid = ?")
@@ -55,14 +56,6 @@ public class ReplyEntity {
         this.replyId = replyId;
     }
 
-    public PostEntity getPost() {
-        return post;
-    }
-
-    public void setPost(PostEntity post) {
-        this.post = post;
-    }
-
     public String getBody() {
         return body;
     }
@@ -103,12 +96,20 @@ public class ReplyEntity {
         this.user = user;
     }
 
+    public PostEntity getPost() {
+        return post;
+    }
+
+    public void setPost(PostEntity post) {
+        this.post = post;
+    }
+
     public static ReplyEntity of(String body, UserEntity user, PostEntity post) {
         var reply = new ReplyEntity();
         reply.setBody(body);
         reply.setPost(post);
         // postEntity에 현재 로그인된 유저정보로 user 세팅
-        post.setUser(user);
+        reply.setUser(user);
         return reply;
     }
 

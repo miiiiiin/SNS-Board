@@ -19,6 +19,7 @@ import com.example.board.repository.UserEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -38,6 +39,8 @@ public class ReplyService {
         return replyEntities.stream().map(Reply::from).toList();
     }
 
+    // 댓글 생성 및 댓글 개수 증가 로직이 db 상에서 처리될 때, 하나의 transaction으로 묶여서 수행하게 됨. (데이터 정합성 보장 목적)
+    @Transactional
     // api를 호출한 현재의 유저를 currentUser로 설정
     public Reply createReply(Long postId, ReplyPostRequestBody requestBody, UserEntity currentUser) {
         // postid 기준으로 postEntity(게시물) 찾아오기
@@ -45,9 +48,10 @@ public class ReplyService {
                 .orElseThrow(() ->
                         new PostNotFoundException(postId));
 
-        var replyEntity = ReplyEntity.of(requestBody.body(), currentUser, postEntity) ;
-        var savedReplyEntity = replyEntityRepository.save(replyEntity);
-        return Reply.from(savedReplyEntity);
+        var replyEntity = replyEntityRepository.save(ReplyEntity.of(requestBody.body(), currentUser, postEntity));
+        // 댓글 개수 추가
+        postEntity.setRepliesCount(postEntity.getRepliesCount() + 1);
+        return Reply.from(replyEntity);
     }
 
 
@@ -70,8 +74,9 @@ public class ReplyService {
         return Reply.from(replyEntityRepository.save(replyEntity));
     }
 
+    @Transactional
     public void deleteReply(Long postId, Long replyId, UserEntity currentUser) {
-        postEntityRepository.findById(postId)
+        var postEntity = postEntityRepository.findById(postId)
                 .orElseThrow(() ->
                         new PostNotFoundException(postId));
 
@@ -82,5 +87,9 @@ public class ReplyService {
             throw new UserNotAllowedException();
         }
         replyEntityRepository.delete(replyEntity);
+
+        // 게시물 댓글 수 감소 로직 (음수 값 방지)
+        postEntity.setRepliesCount(Math.max(0, postEntity.getRepliesCount() - 1));
+        postEntityRepository.save(postEntity);
     }
 }
