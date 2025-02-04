@@ -2,12 +2,14 @@ package com.example.board.service;
 
 import com.example.board.exception.post.PostNotFoundException;
 import com.example.board.exception.user.UserNotAllowedException;
+import com.example.board.exception.user.UserNotFoundException;
 import com.example.board.model.entity.UserEntity;
 import com.example.board.model.post.Post;
 import com.example.board.model.post.PostPatchRequestBody;
 import com.example.board.model.post.PostPostRequestBody;
 import com.example.board.model.entity.PostEntity;
 import com.example.board.repository.PostEntityRepository;
+import com.example.board.repository.UserEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.List;
 public class PostService {
 
     @Autowired private PostEntityRepository postEntityRepository;
+    @Autowired private UserEntityRepository userEntityRepository;
 
     public List<Post> getPosts() {
         // 이대로 넘겨주면 raw data를 통으로 넘겨주기 때문에, 서비스에 필요한 필드들만 선별하여 별도의 dto를 구성하여 넉며줌
@@ -73,5 +76,13 @@ public class PostService {
             throw new UserNotAllowedException();
         }
         postEntityRepository.delete(postEntity);
+    }
+
+    public List<Post> getPostsByUsername(String username) {
+        var userEntity = userEntityRepository
+                .findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+        var postEntities = postEntityRepository.findByUser(userEntity);
+        return postEntities.stream().map(Post::from).toList();
     }
 }
