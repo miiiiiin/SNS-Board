@@ -54,7 +54,6 @@ public class PostController {
     public ResponseEntity<Post> updatePost(@PathVariable Long postId, @RequestBody PostPatchRequestBody requestBody, Authentication authentication) {
         logger.info("PATCH /api/v1/posts/{}", postId);
         var post = postService.updatePost(postId, requestBody, (UserEntity) authentication.getPrincipal());
-
         return ResponseEntity.ok(post);
     }
 
