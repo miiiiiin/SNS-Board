@@ -28,22 +28,43 @@ public class PostService {
     @Autowired private UserEntityRepository userEntityRepository;
     @Autowired private LikeEntityRepository likeEntityRepository;
 
-    public List<Post> getPosts() {
+    public List<Post> getPosts(UserEntity currentUser) {
         // 이대로 넘겨주면 raw data를 통으로 넘겨주기 때문에, 서비스에 필요한 필드들만 선별하여 별도의 dto를 구성하여 넉며줌
         // 내부적으로 적절한 sql로 변환되어 실행됨
         var postEntities = postEntityRepository.findAll();
         // postEntity 리스트 요소 POST 형태로 변환해서 리턴
-        return postEntities.stream().map(Post::from).toList();
+        return postEntities.stream().map(
+                postEntity -> getPostWithLikingStatus(postEntity, currentUser))
+                .toList();
     }
 
-    public Post  getPostByPostId(Long postId) {
+    public Post getPostByPostId(Long postId, UserEntity currentUser) {
         // postId() -> record 객체로 생성 시 사용 가능
+        // optional 형태인데 데이터가 존재하지 않는다면 예외처리 던짐
         var postEntity = postEntityRepository.findById(postId)
                 .orElseThrow(() ->
                         new PostNotFoundException(postId));
-        // optional 형태인데 데이터가 존재하지 않는다면 예외처리 던짐
+
+        // 현재의 currentUser가 postEntity를 좋아하고 있는지를 확인
+//        var isLiking = likeEntityRepository.findByUserAndPost(currentUser, postEntity)
+//                .isPresent();
+//        // POST DTO로 변환해서 반환
+//        return Post.from(postEntity, isLiking);
+        return getPostWithLikingStatus(postEntity, currentUser);
+    }
+
+    /**
+     * isLiking 체크해서 POST 레코드로 반환해주는 함수(공통)
+     * @param postEntity
+     * @param currentUser
+     * @return
+     */
+    private Post getPostWithLikingStatus(PostEntity postEntity, UserEntity currentUser) {
+        // 현재의 currentUser가 postEntity를 좋아하고 있는지를 확인
+        var isLiking = likeEntityRepository.findByUserAndPost(currentUser, postEntity)
+                .isPresent();
         // POST DTO로 변환해서 반환
-        return Post.from(postEntity);
+        return Post.from(postEntity, isLiking);
     }
 
     // api를 호출한 현재의 유저를 currentUser로 설정
@@ -83,12 +104,14 @@ public class PostService {
         postEntityRepository.delete(postEntity);
     }
 
-    public List<Post> getPostsByUsername(String username) {
+    public List<Post> getPostsByUsername(String username, UserEntity currentUser) {
         var userEntity = userEntityRepository
                 .findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
         var postEntities = postEntityRepository.findByUser(userEntity);
-        return postEntities.stream().map(Post::from).toList();
+        return postEntities.stream().map(
+                postEntity -> getPostWithLikingStatus(postEntity, currentUser))
+                .toList();
     }
 
     /**
@@ -106,10 +129,12 @@ public class PostService {
         if (likeEntity.isPresent()) {
             likeEntityRepository.delete(likeEntity.get());
             postEntity.setLikesCount(Math.max(0, postEntity.getLikesCount() - 1));
+            return Post.from(postEntityRepository.save(postEntity), false);
         } else {
             likeEntityRepository.save(LikeEntity.of(currentUser, postEntity));
             postEntity.setLikesCount(postEntity.getLikesCount() + 1);
+            return Post.from(postEntityRepository.save(postEntity), true);
         }
-        return Post.from(postEntityRepository.save(postEntity));
+//        return Post.from(postEntityRepository.save(postEntity));
     }
 }

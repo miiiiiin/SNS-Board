@@ -73,7 +73,7 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public List<User> getUsers(String query) {
+    public List<User> getUsers(String query, UserEntity currentUser) {
         List<UserEntity> userEntities;
 
         if (query != null && !query.isBlank()) {
@@ -82,13 +82,26 @@ public class UserService implements UserDetailsService {
         } else {
             userEntities = userEntityRepository.findAll();
         }
-        return userEntities.stream().map(User::from).toList();
+        return userEntities.stream().map(
+                userEntity -> getUserWithFollowingStatus(currentUser, userEntity)).toList();
     }
 
-    public User getUser(String username) {
+    public User getUser(String username, UserEntity currentUser) {
         var userEntity = userEntityRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
-        return User.from(userEntity);
+        return getUserWithFollowingStatus(currentUser, userEntity);
+    }
+
+    /**
+     * (공통 메서드)
+     * API를 호출하고 있는 유저가 팔로잉하고 있는지 상태 체크 (팔로워: currentUser, 팔로잉: userEntity)
+     * @param currentUser
+     * @param userEntity
+     * @return
+     */
+    private User getUserWithFollowingStatus(UserEntity currentUser, UserEntity userEntity) {
+        boolean isFollowing = followEntityRepository.findByFollowerAndFollowing(currentUser, userEntity).isPresent();
+        return User.from(userEntity, isFollowing);
     }
 
     public User updateUser(String username, UserPatchRequestBody requestBody, UserEntity currentUser) {
@@ -142,7 +155,7 @@ public class UserService implements UserDetailsService {
         userEntityRepository.saveAll(List.of(currentUser, following));
 
         // 팔로우 처리 끝나면 username을 가지고 있는 user(following)을 유저 레코드로 변환하여 반환
-        return User.from(following);
+        return User.from(following, true);
     }
 
 
@@ -171,7 +184,7 @@ public class UserService implements UserDetailsService {
         currentUser.setFollowingsCount(Math.max(0, following.getFollowingsCount() - 1));
 
         userEntityRepository.saveAll(List.of(currentUser, following));
-        return User.from(following);
+        return User.from(following, false);
     }
 
     /**
@@ -179,7 +192,7 @@ public class UserService implements UserDetailsService {
      * @param username
      * @return
      */
-    public List<User> getFollowersByUser(String username) {
+    public List<User> getFollowersByUser(String username, UserEntity currentUser) {
         // 해당 유저 존재하는지 확인
         var following = userEntityRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
@@ -188,7 +201,7 @@ public class UserService implements UserDetailsService {
         var followEntities = followEntityRepository.findByFollowing(following);
         // follower 유저 리스트로 변환해서 반환
         return followEntities.stream().map(follow ->
-            User.from(follow.getFollower())).toList();
+            getUserWithFollowingStatus(currentUser, follow.getFollower())).toList();
     }
 
     /**
@@ -196,14 +209,16 @@ public class UserService implements UserDetailsService {
      * @param username
      * @return
      */
-    public List<User> getFollowingsByUser(String username) {
+    public List<User> getFollowingsByUser(String username, UserEntity currentUser) {
         var follower = userEntityRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
 
         // 이 안에 들어있는 모든 팔로워들은 모두 동일한 팔로잉을 가짐. 위 username을 팔로우하고 있는 모든 팔로워들을 가져올 수 있음
         var followEntities = followEntityRepository.findByFollowing(follower);
         // follower 유저 리스트로 변환해서 반환
+//        return followEntities.stream().map(follow ->
+//                User.from(follow.getFollowing())).toList();
         return followEntities.stream().map(follow ->
-                User.from(follow.getFollowing())).toList();
+                getUserWithFollowingStatus(currentUser, follow.getFollowing())).toList();
     }
 }

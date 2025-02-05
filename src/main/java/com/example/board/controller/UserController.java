@@ -23,6 +23,7 @@ public class UserController {
     PostService postService;
 
     /**
+     * 현재 로그인된 상태 (좋아요, 팔로우 api 호출하는 주체)의 유저 정보가 필요하여 authentication 파라미터 추가
      * 유저 리스트 조회
      * 쿼리 파라미터로 검색
      * @param query
@@ -30,8 +31,8 @@ public class UserController {
      * 검색어가 없을 경우에는 모든 유저 반환, 그렇지 않을 경우, 검색어가 포함된 사용자 반환
      */
     @GetMapping
-    public ResponseEntity<List<User>> getUsers(@RequestParam(required = false) String query) {
-        var users = userService.getUsers(query);
+    public ResponseEntity<List<User>> getUsers(@RequestParam(required = false) String query, Authentication authentication) {
+        var users = userService.getUsers(query, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(users);
 
     }
@@ -42,8 +43,8 @@ public class UserController {
      * @return
      */
     @GetMapping("/{username}")
-    public ResponseEntity<User> getUser(@PathVariable String username) {
-        var user = userService.getUser(username);
+    public ResponseEntity<User> getUser(@PathVariable String username, Authentication authentication) {
+        var user = userService.getUser(username, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(user);
     }
 
@@ -64,13 +65,14 @@ public class UserController {
     }
 
     /**
-     *
+     * isLiking 상태값 체크하기 위해 authentication 파라미터 추가
      * @param username
+     * @param authentication
      * @return
      */
     @GetMapping("/{username}/posts")
-    public ResponseEntity<List<Post>> getPostsByUsername(@PathVariable String username) {
-        var posts = postService.getPostsByUsername(username);
+    public ResponseEntity<List<Post>> getPostsByUsername(@PathVariable String username, Authentication authentication) {
+        var posts = postService.getPostsByUsername(username, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(posts);
     }
 
@@ -139,14 +141,14 @@ public class UserController {
      * authentication 필요x (현재 로그인된 유저에 대한 정보 확인할 때 필요한 것)
      */
     @GetMapping("/{username}/followers")
-    public ResponseEntity<List<User>> getFollowersByUser(@PathVariable String username) {
-        var followers = userService.getFollowersByUser(username);
+    public ResponseEntity<List<User>> getFollowersByUser(@PathVariable String username, Authentication authentication) {
+        var followers = userService.getFollowersByUser(username, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(followers);
     }
 
     @GetMapping("/{username}/followings")
-    public ResponseEntity<List<User>> getFollowingsByUser(@PathVariable String username) {
-        var followings = userService.getFollowingsByUser(username);
+    public ResponseEntity<List<User>> getFollowingsByUser(@PathVariable String username, Authentication authentication) {
+        var followings = userService.getFollowingsByUser(username, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(followings);
     }
 

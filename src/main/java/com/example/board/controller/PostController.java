@@ -23,17 +23,23 @@ public class PostController {
     private PostService postService;
 
     @GetMapping
-    public ResponseEntity<List<Post>> getPosts() {
+    public ResponseEntity<List<Post>> getPosts(Authentication authentication) {
         logger.info("GET /api/v1/posts");
-        var posts = postService.getPosts();
+        var posts = postService.getPosts((UserEntity) authentication.getPrincipal());
         // 200 ok와 응답으로 내려줌
         return ResponseEntity.ok(posts);
     }
 
+    /**
+     * isLiking 상태값 파악하기 위해서는 단건 조회 API를 호출하는 유저의 정보가 필요하기 때문에 auth 파라미터 추가
+     * @param postId
+     * @param authentication
+     * @return
+     */
     @GetMapping("/{postId}")
-    public ResponseEntity<Post> getPostByPostId(@PathVariable Long postId) {
+    public ResponseEntity<Post> getPostByPostId(@PathVariable Long postId, Authentication authentication) {
         logger.info("GET /api/v1/posts/{}", postId);
-        var post = postService.getPostByPostId(postId);
+        var post = postService.getPostByPostId(postId, (UserEntity) authentication.getPrincipal());
 //        return matchingPost
 //                .map(ResponseEntity::ok)
 //                .orElseGet(() -> ResponseEntity.notFound().build());

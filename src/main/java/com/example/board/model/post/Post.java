@@ -22,10 +22,12 @@ public record Post(
         Long likesCount,
         ZonedDateTime createdDateTime,
         ZonedDateTime updatedDateTime,
-        ZonedDateTime deletedDateTime
+        ZonedDateTime deletedDateTime,
+        Boolean isLiking
 ) {
 
     // PostEntity 받아서 POST record 객체 형태로 변환
+    // 기존 코드에서 호출하는 from method의 에러가 발생할 수 있기 때문에 isLiking null 초기화
     public static Post from(PostEntity postEntity) {
         return new Post(
                 postEntity.getPostId(),
@@ -35,7 +37,22 @@ public record Post(
                 postEntity.getLikesCount(),
                 postEntity.getCreatedDateTime(),
                 postEntity.getUpdatedDateTime(),
-                postEntity.getDeletedDateTime());
+                postEntity.getDeletedDateTime(),
+                null);
+    }
+
+    // post 레코드 생성할 때, 원하는 상태값 세팅할 수 있도록 설정
+    public static Post from(PostEntity postEntity, Boolean isLiking) {
+        return new Post(
+                postEntity.getPostId(),
+                postEntity.getBody(),
+                User.from(postEntity.getUser()),
+                postEntity.getRepliesCount(),
+                postEntity.getLikesCount(),
+                postEntity.getCreatedDateTime(),
+                postEntity.getUpdatedDateTime(),
+                postEntity.getDeletedDateTime(),
+                isLiking);
     }
 }
 
