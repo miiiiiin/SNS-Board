@@ -1,7 +1,6 @@
 package com.example.board.controller;
 
 import com.example.board.model.entity.UserEntity;
-import com.example.board.model.like.Like;
 import com.example.board.model.post.Post;
 import com.example.board.model.post.PostPatchRequestBody;
 import com.example.board.model.post.PostPostRequestBody;

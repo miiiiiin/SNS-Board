@@ -103,4 +103,51 @@ public class UserController {
         return ResponseEntity.ok(response);
 //        return new ResponseEntity<>(user, HttpStatus.OK);
     }
+
+
+    // TODO: FOLLOW 기능
+
+    /**
+     * username을 가진 유저를 팔로우 하겠다
+     * @param username
+     * @return
+     */
+    @PostMapping("/{username}/follows")
+    public ResponseEntity<User> follow(@PathVariable String username, Authentication authentication) {
+        // follow하고자 하는 대상, 현재 follow api를 호출하는 주체(follower가 될 사람)
+        var user = userService.follow(username, (UserEntity) authentication.getPrincipal());
+        return ResponseEntity.ok(user);
+    }
+
+    /**
+     * follow 취소 기능
+     * follow 주체는 api 호출하는 주체 본인이기 때문에 별도의 키값(followId)가 필요하지 않음
+     * @param username
+     * @param authentication
+     * @return
+     */
+    @DeleteMapping("/{username}/follows")
+    public ResponseEntity<User> unfollow(@PathVariable String username, Authentication authentication) {
+        // follow하고자 하는 대상, 현재 follow api를 호출하는 주체(follower가 될 사람)
+        var user = userService.unfollow(username, (UserEntity) authentication.getPrincipal());
+        return ResponseEntity.ok(user);
+    }
+
+
+    /**
+     * 팔로잉, 팔로워 목록 조회
+     * authentication 필요x (현재 로그인된 유저에 대한 정보 확인할 때 필요한 것)
+     */
+    @GetMapping("/{username}/followers")
+    public ResponseEntity<List<User>> getFollowersByUser(@PathVariable String username) {
+        var followers = userService.getFollowersByUser(username);
+        return ResponseEntity.ok(followers);
+    }
+
+    @GetMapping("/{username}/followings")
+    public ResponseEntity<List<User>> getFollowingsByUser(@PathVariable String username) {
+        var followings = userService.getFollowingsByUser(username);
+        return ResponseEntity.ok(followings);
+    }
+
 }

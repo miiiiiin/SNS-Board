@@ -1,12 +1,17 @@
 package com.example.board.service;
 
+import com.example.board.exception.follow.FollowAlreadyExistException;
+import com.example.board.exception.follow.FollowNotFoundException;
+import com.example.board.exception.follow.InvalidFollowException;
 import com.example.board.exception.user.UserAlreadyExistException;
 import com.example.board.exception.user.UserNotAllowedException;
 import com.example.board.exception.user.UserNotFoundException;
+import com.example.board.model.entity.FollowEntity;
 import com.example.board.model.entity.UserEntity;
 import com.example.board.model.user.User;
 import com.example.board.model.user.UserAuthenticationResponse;
 import com.example.board.model.user.UserPatchRequestBody;
+import com.example.board.repository.FollowEntityRepository;
 import com.example.board.repository.UserEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,6 +27,8 @@ import java.util.List;
 public class UserService implements UserDetailsService {
     @Autowired
     private UserEntityRepository userEntityRepository;
+    @Autowired
+    private FollowEntityRepository followEntityRepository;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
@@ -96,5 +104,106 @@ public class UserService implements UserDetailsService {
             userEntity.setDescription(requestBody.description());
         }
         return User.from(userEntityRepository.save(userEntity));
+    }
+
+    /**
+     * follow 기능
+     * @param username
+     * @param currentUser
+     * @return
+     */
+    @Transactional
+    public User follow(String username, UserEntity currentUser) {
+        // 팔로우 할 대상 찾기
+        var following = userEntityRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+        // 본인 스스로를 팔로우 할 수 없음
+        if (following.equals(currentUser)) {
+            throw new InvalidFollowException("USER CANNOT FOLLOW THEMSELVES");
+        }
+        // follow 추가
+        // 중복 follow 검증 (api를 호출하는 주체가 follower가 됨)
+        followEntityRepository.findByFollowerAndFollowing(currentUser, following)
+                .ifPresent(
+                        follow -> {
+                            throw new FollowAlreadyExistException(currentUser, following);
+                        }
+                );
+
+        followEntityRepository.save(FollowEntity.of(currentUser, following));
+        // 팔로우 당하는 사람의 팔로워 숫자 증가
+        following.setFollowersCount(following.getFollowersCount() + 1);
+        // 팔로우 하는 주체의 팔로우 숫자 증가
+        currentUser.setFollowingsCount(following.getFollowingsCount() + 1);
+
+        // UserEntity에 follow, follower 변경 갱신 저장
+//        userEntityRepository.save(following);
+//        userEntityRepository.save(currentUser);
+        userEntityRepository.saveAll(List.of(currentUser, following));
+
+        // 팔로우 처리 끝나면 username을 가지고 있는 user(following)을 유저 레코드로 변환하여 반환
+        return User.from(following);
+    }
+
+
+    /**
+     * unfollow 기능
+     * @param username
+     * @param currentUser
+     * @return
+     */
+    @Transactional
+    public User unfollow(String username, UserEntity currentUser) {
+        // 팔로우 취소할 대상 찾기
+        var following = userEntityRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+        // 본인 스스로를 언팔로우 할 수 없음
+        if (following.equals(currentUser)) {
+            throw new InvalidFollowException("USER CANNOT UNFOLLOW THEMSELVES");
+        }
+
+        // followentity가 없으면 예외 던짐
+        var followEntity = followEntityRepository.findByFollowerAndFollowing(currentUser, following)
+                .orElseThrow(() -> new FollowNotFoundException(currentUser, following));
+
+        followEntityRepository.delete(followEntity);
+        following.setFollowersCount(Math.max(0, following.getFollowersCount() - 1));
+        currentUser.setFollowingsCount(Math.max(0, following.getFollowingsCount() - 1));
+
+        userEntityRepository.saveAll(List.of(currentUser, following));
+        return User.from(following);
+    }
+
+    /**
+     * username의 팔로워 리스트
+     * @param username
+     * @return
+     */
+    public List<User> getFollowersByUser(String username) {
+        // 해당 유저 존재하는지 확인
+        var following = userEntityRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+
+        // 이 안에 들어있는 모든 팔로워들은 모두 동일한 팔로잉을 가짐. 위 username을 팔로우하고 있는 모든 팔로워들을 가져올 수 있음
+        var followEntities = followEntityRepository.findByFollowing(following);
+        // follower 유저 리스트로 변환해서 반환
+        return followEntities.stream().map(follow ->
+            User.from(follow.getFollower())).toList();
+    }
+
+    /**
+     * username이 팔로워 (username이 팔로잉하고 있는 리스트)
+     * @param username
+     * @return
+     */
+    public List<User> getFollowingsByUser(String username) {
+        var follower = userEntityRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+
+        // 이 안에 들어있는 모든 팔로워들은 모두 동일한 팔로잉을 가짐. 위 username을 팔로우하고 있는 모든 팔로워들을 가져올 수 있음
+        var followEntities = followEntityRepository.findByFollowing(follower);
+        // follower 유저 리스트로 변환해서 반환
+        return followEntities.stream().map(follow ->
+                User.from(follow.getFollowing())).toList();
     }
 }
