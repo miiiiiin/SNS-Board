@@ -27,6 +27,8 @@ import java.util.List;
 @Service
 public class ReplyService {
 
+    @Autowired
+    private  UserEntityRepository userEntityRepository;
     @Autowired private PostEntityRepository postEntityRepository;
     @Autowired private ReplyEntityRepository replyEntityRepository;
 
@@ -91,5 +93,18 @@ public class ReplyService {
         // 게시물 댓글 수 감소 로직 (음수 값 방지)
         postEntity.setRepliesCount(Math.max(0, postEntity.getRepliesCount() - 1));
         postEntityRepository.save(postEntity);
+    }
+
+    /**
+     * user가 쓴 답글 목록 가져오기
+     * @param username
+     * @return
+     */
+    public List<Reply> getRepliesByUser(String username) {
+        // username 기준 찾아낸 userEntity
+        var userEntity = userEntityRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+        var replyEntities = replyEntityRepository.findByUser(userEntity);
+        return replyEntities.stream().map(Reply::from).toList();
     }
 }

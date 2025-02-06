@@ -2,8 +2,10 @@ package com.example.board.controller;
 
 import com.example.board.model.entity.UserEntity;
 import com.example.board.model.post.Post;
+import com.example.board.model.reply.Reply;
 import com.example.board.model.user.*;
 import com.example.board.service.PostService;
+import com.example.board.service.ReplyService;
 import com.example.board.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,8 @@ public class UserController {
     UserService userService;
     @Autowired
     PostService postService;
+    @Autowired
+    ReplyService replyService;
 
     /**
      * 현재 로그인된 상태 (좋아요, 팔로우 api 호출하는 주체)의 유저 정보가 필요하여 authentication 파라미터 추가
@@ -141,7 +145,7 @@ public class UserController {
      * authentication 필요x (현재 로그인된 유저에 대한 정보 확인할 때 필요한 것)
      */
     @GetMapping("/{username}/followers")
-    public ResponseEntity<List<User>> getFollowersByUser(@PathVariable String username, Authentication authentication) {
+    public ResponseEntity<List<Follower>> getFollowersByUser(@PathVariable String username, Authentication authentication) {
         var followers = userService.getFollowersByUser(username, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(followers);
     }
@@ -150,6 +154,21 @@ public class UserController {
     public ResponseEntity<List<User>> getFollowingsByUser(@PathVariable String username, Authentication authentication) {
         var followings = userService.getFollowingsByUser(username, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(followings);
+    }
+
+
+    @GetMapping("/{username}/replies")
+    public ResponseEntity<List<Reply>> getRepliesByUser(@PathVariable String username) {
+        // username 기준으로 찾아낸 답글들 반환
+        var replies = replyService.getRepliesByUser(username);
+        return ResponseEntity.ok(replies);
+    }
+
+
+    @GetMapping("/{username}/liked-users")
+    public ResponseEntity<List<LikedUser>> getLikedUsersByUser(@PathVariable String username, Authentication authentication) {
+        var likedUsers = userService.getLikedUsersByUser(username, (UserEntity) authentication.getPrincipal());
+        return ResponseEntity.ok(likedUsers);
     }
 
 }
